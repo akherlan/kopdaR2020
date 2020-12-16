@@ -1,2 +1,1 @@
-# kopdaR2020
-Spatial with R
+**nice to meet you**
