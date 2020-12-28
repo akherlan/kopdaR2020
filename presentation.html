@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Introduction to #rspatial</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Andi K. Herlan" />
+    <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/default-fonts.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Introduction to #rspatial
+## - A brief to spatial data analysis with R -
+### Andi K. Herlan
+### 2020/12/28
+
+---
+
+
+class: inverse, center, middle
+
+# Overview
+
+---
+
+## What shared about
+
+- First section such in a book of spatial analysis
+
+- Preliminary task before explanatory and understanding data
+
+--
+
+### Contents
+
+- Rpatial usage
+
+- Data structures in R
+
+- GIS terminology
+
+- Working with spatial data
+
+  - Vector data: **sp**, **sf** packages (*comprehensive*)
+  
+  - Raster data: **raster** package (*simple*)
+  
+  - Working with datacubes: **stars** package (*introduction*)
+
+- Spatial packages for analysis
+
+---
+
+## Rspatial usage
+
+- hydrology, climate, weather modelling or predicting
+
+- species observation and monitoring
+
+- forestry
+
+- environmental analysis
+
+- socio-economic and demographic analysis
+
+- infrastructure development and evaluation
+
+- epidemiology
+
+- data journalism
+
+- etc.
+
+---
+## Data structures
+
+&lt;center&gt;&lt;img src="http://venus.ifca.unican.es/Rintro/_images/dataStructuresNew.png"&gt;&lt;/center&gt;
+
+.footnote[Image: venus.ifca.unican.es/Rintro]
+
+and...
+
+---
+
+## Data structures
+
+The object is a data structure having some attributes (slots) and methods. Central to any object-oriented system are the concepts of *class* and *method*.  Object system in R: 
+
+- S3 class, most of the R built-in classes
+
+- S4 class, improvement over S3
+
+- RC (references class)
+
+
+&lt;center&gt;&lt;img src="resource/s3-s4-rc.png" style="height:280px; width:auto"&gt;&lt;/center&gt;
+
+---
+class: inverse, middle, center
+
+# GIS Terminology
+
+---
+background-image: url(http://michaelminn.net/tutorials/gis-data/2019-points-lines-polygons.png)
+background-size: 660px
+background-position: 50% 50%
+
+## GIS data
+
+.footnote[source: michaelminn.net]
+
+---
+background-image: url(https://raw.githubusercontent.com/akherlan/idjn-rspatial/master/assets/projections.png)
+background-size: 660px
+background-position: 50% 50%
+
+## Projection
+
+---
+class: inverse, middle, center
+
+# Working with Spatial Data
+
+---
+
+## **sp** package
+
+A package providing classes and methods for spatial data: points, lines, polygons and grids.
+
+The **sp**'s class objects:
+
+&lt;center&gt;&lt;img src="resource/sp-classes.png" style="height:380px; width:auto"&gt;&lt;/center&gt;
+
+---
+
+### **sp** class
+
+The **sp** used S4 class object, attributes or slots could be accessed using `@`.
+
+
+```r
+cty_sp &lt;- rnaturalearth::ne_countries(returnclass = "sp")
+slotNames(cty_sp)
+```
+
+```
+## [1] "data"        "polygons"    "plotOrder"   "bbox"        "proj4string"
+```
+
+&lt;center&gt;&lt;img src="resource/class_sp_df.gif" style="height:320px;width:auto"&gt;&lt;/center&gt;
+
+---
+
+### Methods for **sp**
+
+Some functions for accessing slot from **sp** class data:
+
+
+```r
+library("sp")
+proj4string(cty_sp)
+```
+
+```
+## [1] "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+```
+
+```r
+bbox(cty_sp)
+```
+
+```
+##    min       max
+## x -180 180.00000
+## y  -90  83.64513
+```
+
+```r
+# don't using data(), it's not sp method
+cty_sp@data[c("name", "abbrev", "pop_est")][71:73,]
+```
+
+```
+##         name abbrev   pop_est
+## 70     Haiti  Haiti   9035536
+## 71   Hungary   Hun.   9905596
+## 72 Indonesia  Indo. 240271522
+```
+
+---
+
+## **sp** or **sf** ?
+
+&lt;center&gt;&lt;img src="resource/sf-scheme.svg"&gt;&lt;/center&gt;
+
+---
+background-image: url(https://user-images.githubusercontent.com/520851/34849243-0972e474-f722-11e7-9a3d-2d4bf5075835.png)
+background-size: 160px
+background-position: 90% 8%
+
+
+## Why not just use **sp**
+
+Absolutely, **sp** is powerfull!
+
+But **sf** ...
+
+--
+
+- using `data.frame` structure
+
+--
+
+- common attribute table format
+
+--
+
+- GIS GUI app user friendly
+
+--
+
+- and loves **tidyverse**!
+
+
+&lt;center&gt;&lt;img src="https://tidyverse.tidyverse.org/articles/tidyverse-logo.png" style="height:140px;width:auto"&gt;&lt;/center&gt;
+
+---
+
+## **sf** package
+
+The **sf** package in R is an implementation of [Simple Features](https://en.wikipedia.org/wiki/Simple_Features). Referring spatial data classes, method and the package's name. **sf** uses S3 class while **sp** uses S4.
+
+Installation:
+
+
+```r
+install.packages("sf")
+```
+
+But...
+
+--
+
+Firsly, install dependencies, especially on MacOSX and Linux ([more](https://r-spatial.github.io/sf/)):
+
+- GEOS, supporting geometrical operations
+- GDAL, supporting all driver options
+- PROJ, for CRS conversions and transformations
+
+
+```r
+library("sf")
+```
+
+```
+## Linking to GEOS 3.8.0, GDAL 3.0.4, PROJ 6.3.1
+```
+
+Windows require Rtools for [rwinbin](https://github.com/rwinlib/) static library. So, install Rtools instead.
+
+---
+background-image: url(https://keen-swartz-3146c4.netlify.app/images/sf_deps.png)
+background-size: 800px
+background-position: 50% 60%
+
+### Dependencies
+
+.footnote[Credit: r-spatial.org (See ... for more details)]
+
+---
+background-image: url(http://s2geometry.io/devguide/img/s2hierarchy.gif)
+background-size: 680px
+background-position: 50% 62%
+
+### The earth is no longer flat
+
+- Upcoming **sf 1.0** will use **s2** for spherical geometry.
+- More info: [www.r-spatial.org](https://www.r-spatial.org/r/2020/06/17/s2.html)
+
+.footnote[source: s2geometry.io]
+
+---
+
+### Reading vector data
+
+Reading various spatial data formats handled by GDAL, both vector and raster formats.
+
+
+```r
+nc &lt;- st_read(system.file("gpkg/nc.gpkg", package="sf"))
+```
+
+```
+## Reading layer `nc.gpkg' from data source `/home/andi/R/x86_64-pc-linux-gnu-library/4.0/sf/gpkg/nc.gpkg' using driver `GPKG'
+## Simple feature collection with 100 features and 14 fields
+## geometry type:  MULTIPOLYGON
+## dimension:      XY
+## bbox:           xmin: -84.32385 ymin: 33.88199 xmax: -75.45698 ymax: 36.58965
+## geographic CRS: NAD27
+```
+
+---
+
+### Available drivers
+
+
+```r
+nrow(st_drivers("vector"))      # counting vector drivers
+```
+
+```
+## [1] 89
+```
+
+```r
+nrow(st_drivers("raster"))      # counting raster drivers
+```
+
+```
+## [1] 146
+```
+
+```r
+head(st_drivers()$name, 40)     # driver sample
+```
+
+```
+##  [1] "PCIDSK"         "netCDF"         "PDS4"           "JP2OpenJPEG"   
+##  [5] "PDF"            "MBTiles"        "EEDA"           "ESRI Shapefile"
+##  [9] "MapInfo File"   "UK .NTF"        "OGR_SDTS"       "S57"           
+## [13] "DGN"            "OGR_VRT"        "REC"            "Memory"        
+## [17] "BNA"            "CSV"            "NAS"            "GML"           
+## [21] "GPX"            "LIBKML"         "KML"            "GeoJSON"       
+## [25] "GeoJSONSeq"     "ESRIJSON"       "TopoJSON"       "Interlis 1"    
+## [29] "Interlis 2"     "OGR_GMT"        "GPKG"           "SQLite"        
+## [33] "OGR_DODS"       "ODBC"           "WAsP"           "PGeo"          
+## [37] "MSSQLSpatial"   "OGR_OGDI"       "PostgreSQL"     "MySQL"
+```
+
+
+---
+background-image: url(https://user-images.githubusercontent.com/520851/50280460-e35c1880-044c-11e9-9ed7-cc46754e49db.jpg)
+background-size: 760px
+background-position: 50% 60%
+
+### Attribute table alike
+
+---
+
+### Attribute table alike
+
+Geometry information (feature geometry) store in a list-column as one of `data.frame`'s field binding with its attribute table.
+
+
+```r
+head(nc)[,4:5]
+```
+
+```
+## Simple feature collection with 6 features and 2 fields
+## geometry type:  MULTIPOLYGON
+## dimension:      XY
+## bbox:           xmin: -81.74107 ymin: 36.07282 xmax: -75.77316 ymax: 36.58965
+## geographic CRS: NAD27
+##   CNTY_ID        NAME                           geom
+## 1    1825        Ashe MULTIPOLYGON (((-81.47276 3...
+## 2    1827   Alleghany MULTIPOLYGON (((-81.23989 3...
+## 3    1828       Surry MULTIPOLYGON (((-80.45634 3...
+## 4    1831   Currituck MULTIPOLYGON (((-76.00897 3...
+## 5    1832 Northampton MULTIPOLYGON (((-77.21767 3...
+## 6    1833    Hertford MULTIPOLYGON (((-76.74506 3...
+```
+
+```r
+class(nc)
+```
+
+```
+## [1] "sf"         "data.frame"
+```
+
+---
+
+### Attribute table alike
+
+
+```r
+cty &lt;- rnaturalearth::ne_countries(returnclass = "sf")
+dplyr::select(cty, name, abbrev, pop_est)
+```
+
+
+&lt;center&gt;&lt;img src="resource/sf-structure.png"&gt;&lt;/center&gt;
+
+---
+
+
+```r
+methods(class = "sf")       # Most start with prefix st_
+```
+
+```
+##  [1] [                     [[&lt;-                  $&lt;-                  
+##  [4] aggregate             as.data.frame         cbind                
+##  [7] coerce                dbDataType            dbWriteTable         
+## [10] filter                identify              initialize           
+## [13] merge                 plot                  print                
+## [16] rbind                 show                  slotsFromS3          
+## [19] st_agr                st_agr&lt;-              st_area              
+## [22] st_as_s2              st_as_sf              st_bbox              
+## [25] st_boundary           st_buffer             st_cast              
+## [28] st_centroid           st_collection_extract st_convex_hull       
+## [31] st_coordinates        st_crop               st_crs               
+## [34] st_crs&lt;-              st_difference         st_filter            
+## [37] st_geometry           st_geometry&lt;-         st_interpolate_aw    
+## [40] st_intersection       st_intersects         st_is_valid          
+## [43] st_is                 st_join               st_line_merge        
+## [46] st_m_range            st_make_valid         st_nearest_points    
+## [49] st_node               st_normalize          st_point_on_surface  
+## [52] st_polygonize         st_precision          st_reverse           
+## [55] st_sample             st_segmentize         st_set_precision     
+## [58] st_shift_longitude    st_simplify           st_snap              
+## [61] st_sym_difference     st_transform          st_triangulate       
+## [64] st_union              st_voronoi            st_wrap_dateline     
+## [67] st_write              st_z_range            st_zm                
+## [70] transform            
+## see '?methods' for accessing help and source code
+```
+
+---
+
+### Map plot
+
+.pull-left[
+**base** (actually **sf** method)
+
+
+```r
+plot(st_geometry(nc),
+     col = "gray")
+```
+
+![](presentation_files/figure-html/map1-1.svg)&lt;!-- --&gt;
+
+```r
+# plot(nc[0])
+```
+
+]
+
+.pull-right[
+**ggplot2**
+
+
+```r
+ggplot(data = nc) + 
+* geom_sf()
+```
+
+![](presentation_files/figure-html/map2-1.svg)&lt;!-- --&gt;
+
+]
+
+---
+
+### **dplyr** style
+
+Filter rows and columns using **dplyr** functions `filter()` and `select()`:
+
+
+```r
+suppressPackageStartupMessages(library("dplyr"))
+nc %&gt;% 
+  filter(AREA &gt; 0.21) %&gt;% 
+  select(CNTY_ID, NAME, AREA)
+```
+
+```
+## Simple feature collection with 7 features and 3 fields
+## geometry type:  MULTIPOLYGON
+## dimension:      XY
+## bbox:           xmin: -79.45597 ymin: 33.88199 xmax: -77.53864 ymax: 36.06665
+## geographic CRS: NAD27
+##   CNTY_ID      NAME  AREA                           geom
+## 1    1938      Wake 0.219 MULTIPOLYGON (((-78.92107 3...
+## 2    2083   Sampson 0.241 MULTIPOLYGON (((-78.11377 3...
+## 3    2150   Robeson 0.240 MULTIPOLYGON (((-78.86451 3...
+## 4    2162    Bladen 0.225 MULTIPOLYGON (((-78.2615 34...
+## 5    2185    Pender 0.214 MULTIPOLYGON (((-78.02592 3...
+## 6    2232  Columbus 0.240 MULTIPOLYGON (((-78.65572 3...
+## 7    2241 Brunswick 0.212 MULTIPOLYGON (((-78.65572 3...
+```
+
+---
+
+### Geometry attributes
+
+The `st_drop_geometry()` function can be used to remove the geometry column:
+
+
+```r
+st_drop_geometry(nc) %&gt;% head(5) %&gt;% .[,5:7]
+```
+
+```
+##          NAME  FIPS FIPSNO
+## 1        Ashe 37009  37009
+## 2   Alleghany 37005  37005
+## 3       Surry 37171  37171
+## 4   Currituck 37053  37053
+## 5 Northampton 37131  37131
+```
+
+```r
+# st_set_geometry(nc, NULL)           # will give same result
+```
+
+Get the extent of feature geometry using `st_bbox()` function:
+
+
+```r
+st_bbox(nc)
+```
+
+```
+##      xmin      ymin      xmax      ymax 
+## -84.32385  33.88199 -75.45698  36.58965
+```
+
+---
+
+Transform projection to `EPSG:4326` and print the CRS information:
+
+
+```r
+st_transform(nc, crs = 4326) %&gt;% st_crs()
+```
+
+```
+## Coordinate Reference System:
+##   User input: EPSG:4326 
+##   wkt:
+## GEOGCRS["WGS 84",
+##     DATUM["World Geodetic System 1984",
+##         ELLIPSOID["WGS 84",6378137,298.257223563,
+##             LENGTHUNIT["metre",1]]],
+##     PRIMEM["Greenwich",0,
+##         ANGLEUNIT["degree",0.0174532925199433]],
+##     CS[ellipsoidal,2],
+##         AXIS["geodetic latitude (Lat)",north,
+##             ORDER[1],
+##             ANGLEUNIT["degree",0.0174532925199433]],
+##         AXIS["geodetic longitude (Lon)",east,
+##             ORDER[2],
+##             ANGLEUNIT["degree",0.0174532925199433]],
+##     USAGE[
+##         SCOPE["unknown"],
+##         AREA["World"],
+##         BBOX[-90,-180,90,180]],
+##     ID["EPSG",4326]]
+```
+
+---
+
+## Handling raster in R
+
+Simple features (sf) don't scale for raster or imagery data. Using **sp** or **raster** instead.
+
+The **raster** package has functions for creating, reading, manipulating, and writing raster data. Uses an S4 slot structure.
+
+- `RasterLayer`: single-layer (variable) raster data
+
+- `RasterStack`: multi-layer data linked to multiple file
+
+- `RasterBrick`: multi-layer data linked to single (multi-layer) file
+
+while...
+
+--
+
+**terra** (the other raster operator) has only one class object for any kind of raster data: `SpatRaster`. No distinctions between single-layer and multi-layer rasters.
+
+---
+
+## RasterStack &amp; RasterBrick
+
+Listing raster data in a directory:
+
+
+```r
+suppressPackageStartupMessages(library(raster))
+# 10m precipitation data: https://www.worldclim.org/data/worldclim21.html
+prec_path &lt;- "~/R/data/prec/wc2.1_10m_prec"
+prec_list &lt;- list.files(prec_path, full.names = TRUE, pattern = ".tif$")
+prec_list
+```
+
+```
+##  [1] "/home/andi/R/data/prec/wc2.1_10m_prec/wc2.1_10m_prec_01.tif"
+##  [2] "/home/andi/R/data/prec/wc2.1_10m_prec/wc2.1_10m_prec_02.tif"
+##  [3] "/home/andi/R/data/prec/wc2.1_10m_prec/wc2.1_10m_prec_03.tif"
+##  [4] "/home/andi/R/data/prec/wc2.1_10m_prec/wc2.1_10m_prec_04.tif"
+##  [5] "/home/andi/R/data/prec/wc2.1_10m_prec/wc2.1_10m_prec_05.tif"
+##  [6] "/home/andi/R/data/prec/wc2.1_10m_prec/wc2.1_10m_prec_06.tif"
+##  [7] "/home/andi/R/data/prec/wc2.1_10m_prec/wc2.1_10m_prec_07.tif"
+##  [8] "/home/andi/R/data/prec/wc2.1_10m_prec/wc2.1_10m_prec_08.tif"
+##  [9] "/home/andi/R/data/prec/wc2.1_10m_prec/wc2.1_10m_prec_09.tif"
+## [10] "/home/andi/R/data/prec/wc2.1_10m_prec/wc2.1_10m_prec_10.tif"
+## [11] "/home/andi/R/data/prec/wc2.1_10m_prec/wc2.1_10m_prec_11.tif"
+## [12] "/home/andi/R/data/prec/wc2.1_10m_prec/wc2.1_10m_prec_12.tif"
+```
+
+---
+
+### Creating object
+
+Creating a `RasterStack` object from multiple files using `stack()`.
+
+
+```r
+prec_stack &lt;- stack(prec_list)
+crs(prec_stack)
+```
+
+```
+## CRS arguments: +proj=longlat +datum=WGS84 +no_defs
+```
+
+```r
+extent(prec_stack)                     # world
+```
+
+```
+## class      : Extent 
+## xmin       : -180 
+## xmax       : 180 
+## ymin       : -90 
+## ymax       : 90
+```
+
+```r
+xres(prec_stack); yres(prec_stack)     # 0.167 degrees
+```
+
+```
+## [1] 0.1666667
+```
+
+```
+## [1] 0.1666667
+```
+
+---
+
+### Time series
+
+It is actually 1970-2000 monthly average data. Assume it occurred along 2020 for time series simulation only.
+
+
+```r
+bb_idn &lt;- matrix(data = c(94.77,-11.21,141.02,6.27), 
+                 nrow = 2, ncol = 2)
+
+idn &lt;- crop(prec_stack, bb_idn)
+
+t &lt;- as.Date(paste("2020", as.character(1:12), "01", sep = "-"))
+
+idnTS &lt;- rts::rts(idn, t)
+
+class(idnTS)
+```
+
+```
+## [1] "RasterBrickTS"
+## attr(,"package")
+## [1] "rts"
+```
+
+---
+
+
+```r
+plot(idnTS)          # Caution! Dummy data
+```
+
+&lt;img src="presentation_files/figure-html/unnamed-chunk-17-1.png" width="90%" /&gt;
+
+---
+
+### Defining extent
+
+
+```r
+bbb &lt;- matrix(data = c(106.4012,-6.8187,107.1565,-6.2948), 
+              nrow = 2, ncol = 2)
+bogor &lt;- crop(idn, bbb) ; plot(bogor)
+```
+
+&lt;img src="presentation_files/figure-html/unnamed-chunk-18-1.png" width="90%" /&gt;
+
+---
+
+### Accessing values
+
+
+```r
+values(bogor)[,1]             # a number of row of raster object
+```
+
+```
+##  [1] 345 359 362 350 312 409 398 381 353 312 437 408 376 380 341
+```
+
+```r
+getValues(bogor$wc2.1_10m_prec_01)                  # all values
+```
+
+```
+##  [1] 345 359 362 350 312 409 398 381 353 312 437 408 376 380 341
+```
+
+```r
+min(bogor)                    # multiple min values in one layer
+```
+
+```
+## class      : RasterLayer 
+## dimensions : 3, 5, 15  (nrow, ncol, ncell)
+## resolution : 0.1666667, 0.1666667  (x, y)
+## extent     : 106.3333, 107.1667, -6.833333, -6.333333  (xmin, xmax, ymin, ymax)
+## crs        : +proj=longlat +datum=WGS84 +no_defs 
+## source     : memory
+## names      : layer 
+## values     : 84, 222  (min, max)
+```
+
+---
+
+
+```r
+hist(bogor, xlim = c(0,500))
+```
+
+&lt;img src="presentation_files/figure-html/unnamed-chunk-20-1.png" width="90%" /&gt;
+
+---
+
+class: inverse, middle, center
+
+# Working with Datacubes
+
+---
+
+## Raster and vector datacubes
+
+Multi-dimensional spatiotemporal arrays with `stars`.
+
+&lt;center&gt;&lt;img src="https://raw.githubusercontent.com/r-spatial/stars/master/images/cube2.png"&gt;&lt;/center&gt;
+
+---
+
+## Loading data
+
+
+```r
+suppressPackageStartupMessages(library("stars"))
+landsat7 &lt;- system.file("tif/L7_ETMs.tif", package = "stars")
+landsat7 &lt;- read_stars(landsat7)
+class(landsat7)
+```
+
+```
+## [1] "stars"
+```
+
+---
+
+
+```r
+dimnames(landsat7)
+```
+
+```
+## [1] "x"    "y"    "band"
+```
+
+```r
+landsat7                  # show(landsat7)
+```
+
+```
+## stars object with 3 dimensions and 1 attribute
+## attribute(s):
+##   L7_ETMs.tif    
+##  Min.   :  1.00  
+##  1st Qu.: 54.00  
+##  Median : 69.00  
+##  Mean   : 68.91  
+##  3rd Qu.: 86.00  
+##  Max.   :255.00  
+## dimension(s):
+##      from  to  offset delta                       refsys point values    
+## x       1 349  288776  28.5 UTM Zone 25, Southern Hem... FALSE   NULL [x]
+## y       1 352 9120761 -28.5 UTM Zone 25, Southern Hem... FALSE   NULL [y]
+## band    1   6      NA    NA                           NA    NA   NULL
+```
+
+---
+
+
+```r
+plot(landsat7, main = paste("Band", 1:6), col = grey(1:9/10))
+```
+
+![](presentation_files/figure-html/unnamed-chunk-23-1.png)&lt;!-- --&gt;
+
+---
+class: inverse, middle, center
+
+# What's Next?
+
+---
+class: inverse, middle, center
+
+## It's just a beginning
+
+CRAN Task View: [Analysis of Spatial Data](https://cran.r-project.org/web/views/Spatial.html)
+
+---
+class: inverse, middle, center
+
+# And ...
+
+---
+class: center, middle
+
+# Join!
+
+&lt;center&gt;&lt;img src="https://raw.githubusercontent.com/indo-r/r-indonesia.id/master/static/img/favicon/android-chrome-384x384.png" style="height:180px;widht:auto"&gt;&lt;/center&gt;
+
+**Telegram Group Komunitas R Indonesia**
+
+[**@GNURIndonesia**](https://t.me/GNURIndonesia)
+
+---
+class: center, middle
+
+&gt; *"Don't be afraid to ask a question!*
+*You* **R** *contributing by asking the question.*
+*You may not get the answer instantly,*
+*you may not get the answer ever, but*
+*at least you're keeping the discussion going."*
+
+Robin Lovelace (pointing Roger Bivand's statement on [a talk](https://youtu.be/_HBpzbbUVgc?t=3240))
+
+---
+class: inverse, center, middle
+
+# Thanks!
+
+Twitter: [**@terusterang__**](https://twitter.com/terusterang__)
+
+Github: [**akherlan**](https://github.com/akherlan)
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
